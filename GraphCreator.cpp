@@ -12,6 +12,7 @@ using namespace std;
 struct Vertex {
   char label[81];
   int id;
+  int dist;
 };
 
 //prototypes
@@ -21,6 +22,10 @@ int getInt(char* message);
 void setLowercase(char* text);
 
 int getValidVertex(char* label, vector<Vertex> graph);
+void findPath(int startId, int endId, vector<Vertex> graph, int adjacencyMatrix[20][20]);
+bool targetUnvisited(int targetId, vector<Vertex> unvisited);
+int getLeastDistanceId(vector<Vertex> unvisited);
+int getEmptyIndex(vector<Vertex> graph);
 
 const int INPUT_SIZE = 201;
 
@@ -38,14 +43,15 @@ int main(){
   }
 
   char input[INPUT_SIZE];
-  int numVertex = 0;
   int edgeLength;
   char edgeStart[81];
   char edgeEnd[81];
+  int firstVertexId;
+  int secondVertexId;
 
-  cout << "\n-----Graph Creator v1.0-----\n";
+  cout << "\n-----MLG Graph Creator v1.0-----\n";
   cout << "Creates a graph in the console\n";
-  cout << "Availible commands are: 'vertex', 'edge', 'list', 'table', 'search', or 'quit'.\n";
+  cout << "Availible commands are: 'vertex', 'edge', 'list', 'table', 'search', 'help', or 'quit'.\n";
   cout << "C++ Project 13 - Nathan Purwosumarto\n\n";
 
   while(true){
@@ -56,52 +62,128 @@ int main(){
       cout << "Program Terminated." << endl;
       break;
     }
+    //if input = help, displays project information
+    if(strcmp(input, "help") == 0){
+      cout << "\n-----MLG Graph Creator v1.0-----\n";
+      cout << "Creates a graph in the console\n";
+      cout << "Availible commands are: 'vertex', 'edge', 'list', 'table', 'search', 'help', or 'quit'.\n";
+      cout << "C++ Project 13 - Nathan Purwosumarto\n\n";
+    }
     //add a vertex
     else if(strcmp(input, "vertex") == 0){
-      cout << endl << "-----ADDING VERTEX-----" << endl;
-      do{
-        cout << "Enter unique label: ";
-        getInput(v.label);
-      } while(getValidVertex(v.label, graph) != -1 || strcmp(v.label, "back") == 0);
-      v.id = numVertex;
-      graph.push_back(v);
-      numVertex++;
+      char vLabel[INPUT_SIZE];
+      cout << endl << "Do you wish to 'add' or 'remove' vertices? ('back' to exit): ";
+      getInput(input);
+      if(strcmp(input, "add") == 0){
+        do{
+          cout << endl << "-----ADDING VERTEX-----" << endl;
+          do{
+            cout << "Enter unique label: ";
+            getInput(vLabel);
+            firstVertexId = getValidVertex(vLabel, graph);
+          } while(firstVertexId != -1 && strcmp(vLabel, "back") != 0);
+          if(strcmp(vLabel, "back") != 0){
+            strcpy(v.label, vLabel);
+            v.id = getEmptyIndex(graph);
+            v.dist = -1;
+            graph.insert(graph.begin()+v.id, v);
+            cout << "<vertex successfully added>" << endl;
+          }
+        } while(strcmp(vLabel, "back") != 0);
+      }
+      else if(strcmp(input, "remove") == 0){
+        do{
+          cout << endl << "-----REMOVING VERTEX-----" << endl;
+          do{
+            cout << "Enter existing label: ";
+            getInput(vLabel);
+            firstVertexId = getValidVertex(vLabel, graph);
+          } while(firstVertexId == -1 && strcmp(vLabel, "back") != 0);
+          if(strcmp(vLabel, "back") != 0){
+            for(int a = 0; a < graph.size(); a++){
+            	if(strcmp(vLabel,graph[a].label) == 0){
+                for(int b = 0; b < 20; b++){
+                  adjacencyMatrix[b][a] = -1;
+                  adjacencyMatrix[a][b] = -1;
+                }
+            	  graph.erase(graph.begin()+a);
+                cout << "<vertex successfully removed>" << endl;
+            	}
+            }
+          }
+        } while(strcmp(vLabel, "back") != 0);
+      }
       cout << endl;
     }
     //debug method to see all vertices
     else if(strcmp(input, "list") == 0){
        cout << endl << "-----ALL VERTICES-----" << endl;
        for(int a = 0; a < graph.size(); a++){
-         cout << graph[a].label << " " << graph[a].id << endl;
+         cout << "Label: " << graph[a].label << " Id: " << graph[a].id << endl;
        }
        cout << endl;
     }
     //add an edge
     else if(strcmp(input, "edge") == 0){
-      cout << endl << "-----ADDING EDGE-----" << endl;
-      cout << "(input 'back' to cancel)\n" << endl;
-      do{
-        cout << "Enter starting vertex: ";
-        getInput(edgeStart);
-      } while(getValidVertex(edgeStart, graph) == -1 && strcmp(edgeStart, "back") != 0);
-      if(strcmp(edgeStart, "back") == 0){
-        cout << endl;
-        continue;
+      cout << endl << "Do you wish to 'add' or 'remove' edges? ('back' to exit): ";
+      getInput(input);
+      if(strcmp(input, "add") == 0){
+        cout << endl << "-----ADDING EDGE-----" << endl;
+        do{
+          cout << "Enter starting vertex: ";
+          getInput(edgeStart);
+          firstVertexId = getValidVertex(edgeStart, graph);
+        } while(firstVertexId == -1 && strcmp(edgeStart, "back") != 0);
+        if(strcmp(edgeStart, "back") == 0){
+          cout << endl;
+          continue;
+        }
+        do{
+          cout << "Enter ending vertex: ";
+          getInput(edgeEnd);
+          secondVertexId = getValidVertex(edgeEnd, graph);
+        } while(secondVertexId == -1 && strcmp(edgeEnd, "back") != 0);
+        if(strcmp(edgeEnd, "back") == 0){
+          cout << endl;
+          continue;
+        }
+        edgeLength = getInt("Enter edge length: ");
+        cin.ignore(81, '\n');
+        adjacencyMatrix[firstVertexId][secondVertexId] = edgeLength;
+        cout << "<edge successfully added>" << endl;
       }
-      do{
-        cout << "Enter ending vertex: ";
-        getInput(edgeEnd);
-      } while(getValidVertex(edgeEnd, graph) == -1 && strcmp(edgeEnd, "back") != 0);
-      if(strcmp(edgeEnd, "back") == 0){
-        cout << endl;
-        continue;
+      else if(strcmp(input, "remove") == 0){
+        cout << endl << "-----REMOVING EDGE-----" << endl;
+        do{
+          cout << "Enter starting vertex: ";
+          getInput(edgeStart);
+          firstVertexId = getValidVertex(edgeStart, graph);
+        } while(firstVertexId == -1 && strcmp(edgeStart, "back") != 0);
+        if(strcmp(edgeStart, "back") == 0){
+          cout << endl;
+          continue;
+        }
+        do{
+          cout << "Enter ending vertex: ";
+          getInput(edgeEnd);
+          secondVertexId = getValidVertex(edgeEnd, graph);
+        } while(secondVertexId == -1 && strcmp(edgeEnd, "back") != 0);
+        if(strcmp(edgeEnd, "back") == 0){
+          cout << endl;
+          continue;
+        }
+        if(adjacencyMatrix[firstVertexId][secondVertexId] != -1){
+          adjacencyMatrix[firstVertexId][secondVertexId] = -1;
+          cout << "<edge successfully removed>" << endl;
+        }
+        else{
+          cout << "<no edge found>" << endl;
+        }
       }
-      edgeLength = getInt("Enter edge length: ");
-      cin.ignore(81, '\n');
-      adjacencyMatrix[getValidVertex(edgeStart, graph)][getValidVertex(edgeEnd, graph)] = edgeLength;
       cout << endl;
     }
     else if(strcmp(input, "table") == 0){
+      cout << "Adjacency Matrix: " << endl;
       for(int m = 0; m < 20; m++){
         for(int n = 0; n < 20; n++){
           cout << adjacencyMatrix[m][n] << " ";
@@ -109,9 +191,115 @@ int main(){
         cout << endl;
       }
     }
+    else if(strcmp(input, "search") == 0){
+      cout << endl << "-----SEARCH PATH-----" << endl;
+      cout << "(input 'back' to cancel)\n" << endl;
+      do{
+        cout << "Enter starting vertex: ";
+        getInput(edgeStart);
+        firstVertexId = getValidVertex(edgeStart, graph);
+      } while(firstVertexId == -1 && strcmp(edgeStart, "back") != 0);
+      if(strcmp(edgeStart, "back") == 0){
+        cout << endl;
+        continue;
+      }
+      do{
+        cout << "Enter ending vertex: ";
+        getInput(edgeEnd);
+        secondVertexId = getValidVertex(edgeEnd, graph);
+      } while(secondVertexId == -1 && strcmp(edgeEnd, "back") != 0);
+      if(strcmp(edgeEnd, "back") == 0){
+        cout << endl;
+        continue;
+      }
+      findPath(firstVertexId, secondVertexId, graph, adjacencyMatrix);
+      cout << endl;
+    }
   }
 
   return 0;
+}
+
+//attempts to find a path using djikstra's algorithm
+void findPath(int startId, int endId, vector<Vertex> graph, int adjacencyMatrix[20][20]){
+  int leastDistanceId = -1;
+  int currentDistance;
+
+  vector<Vertex> unvisited;
+  for(int a = 0; a < graph.size(); a++){
+    unvisited.push_back(graph[a]);
+  }
+  for(int b = 0; b < unvisited.size(); b++){
+    if(unvisited[b].id == startId){
+      unvisited[b].dist = 0;
+    }
+  }
+  while(targetUnvisited(endId, unvisited)){
+    for(int test = 0; test < unvisited.size(); test++){
+      cout << unvisited[test].label << " " << unvisited[test].id << " " << unvisited[test].dist << endl;
+    }
+    leastDistanceId = getLeastDistanceId(unvisited);
+    cout << "least distance ID: " << leastDistanceId << endl;
+    if(leastDistanceId == -1){
+      break;
+    }
+    //remove least distance node from the unvisited list
+    for(int c = 0; c < unvisited.size(); c++){
+    	if(leastDistanceId == unvisited[c].id){
+        cout << "erase :" << leastDistanceId << endl;
+        currentDistance = unvisited[c].dist;
+    	  unvisited.erase(unvisited.begin()+c);
+    	}
+    }
+
+    //for each of the neighbors
+    for(int d = 0; d < 20; d++){
+      //if there is a path to the neighbor
+      if(adjacencyMatrix[leastDistanceId][d] != -1){
+        //if neighbor is in unvisited set
+        if(targetUnvisited(d, unvisited)){
+          //update distance
+          for(int e = 0; e < unvisited.size(); e++){
+          	if(d == unvisited[e].id){
+              if(unvisited[e].dist == -1 || unvisited[e].dist > currentDistance + adjacencyMatrix[leastDistanceId][d]){
+                unvisited[e].dist = currentDistance + adjacencyMatrix[leastDistanceId][d];
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if(leastDistanceId != -1){
+    cout << "\nLeast distance is: " << currentDistance << endl;
+  }
+  else{
+    cout << "\nNo path found." << endl;
+  }
+}
+
+//checks if the target is in the unvisited set
+bool targetUnvisited(int targetId, vector<Vertex> unvisited){
+  for(int i = 0; i < unvisited.size(); i++){
+    if(unvisited[i].id == targetId){
+      return true;
+    }
+  }
+  return false;
+}
+
+int getLeastDistanceId(vector<Vertex> unvisited){
+  int leastDistance = -1;
+  int leastDistanceId = -1;
+  for(int i = 0; i < unvisited.size(); i++){
+    cout << "testing = " << "label: "  << unvisited[i].label << " distance: " << unvisited[i].dist << endl;
+    if(unvisited[i].dist != -1 && (leastDistance == -1 || (leastDistance != -1 && unvisited[i].dist < leastDistance))){
+      leastDistance = unvisited[i].dist;
+      leastDistanceId = unvisited[i].id;
+    }
+  }
+  cout << "final = " << "id: " << leastDistanceId << "least distance: " << leastDistance << endl;
+  return leastDistanceId;
 }
 
 //checks if a vertex with specified label is in the graph
@@ -130,6 +318,17 @@ void getInput(char* input){
   cin.getline(input, INPUT_SIZE);
   trimWhitespace(input);
   setLowercase(input);
+}
+
+int getEmptyIndex(vector<Vertex> graph){
+  int counter = 0;
+  for(int i = 0; i < graph.size(); i++){
+    if(counter != graph[i].id){
+      return counter;
+    }
+    counter++;
+  }
+  return counter;
 }
 
 //remove extra whitespaces to make sure input is compared as intended
