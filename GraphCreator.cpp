@@ -1,4 +1,4 @@
-//C++ Project 13 - GraphCreator - 4/12/17
+//C++ Project 13 - GraphCreator - 5/23/17
 //Creates an graph in the console
 
 #include <iostream>
@@ -69,11 +69,12 @@ int main(){
       cout << "Availible commands are: 'vertex', 'edge', 'list', 'table', 'search', 'help', or 'quit'.\n";
       cout << "C++ Project 13 - Nathan Purwosumarto\n\n";
     }
-    //add a vertex
+    //if input = vertex, allow user to add or remove vertex
     else if(strcmp(input, "vertex") == 0){
       char vLabel[INPUT_SIZE];
       cout << endl << "Do you wish to 'add' or 'remove' vertices? ('back' to exit): ";
       getInput(input);
+      //add vertices
       if(strcmp(input, "add") == 0){
         do{
           cout << endl << "-----ADDING VERTEX-----" << endl;
@@ -91,6 +92,7 @@ int main(){
           }
         } while(strcmp(vLabel, "back") != 0);
       }
+      //remove vertices
       else if(strcmp(input, "remove") == 0){
         do{
           cout << endl << "-----REMOVING VERTEX-----" << endl;
@@ -101,6 +103,7 @@ int main(){
           } while(firstVertexId == -1 && strcmp(vLabel, "back") != 0);
           if(strcmp(vLabel, "back") != 0){
             for(int a = 0; a < graph.size(); a++){
+              //remove adjacency matrix connections for the deleted vertex
             	if(strcmp(vLabel,graph[a].label) == 0){
                 for(int b = 0; b < 20; b++){
                   adjacencyMatrix[b][a] = -1;
@@ -123,12 +126,14 @@ int main(){
        }
        cout << endl;
     }
-    //add an edge
+    //if input = edge, let user add or remove an edge
     else if(strcmp(input, "edge") == 0){
       cout << endl << "Do you wish to 'add' or 'remove' edges? ('back' to exit): ";
       getInput(input);
+      //add an edge
       if(strcmp(input, "add") == 0){
         cout << endl << "-----ADDING EDGE-----" << endl;
+        //prompt user for first vertex
         do{
           cout << "Enter starting vertex: ";
           getInput(edgeStart);
@@ -138,6 +143,7 @@ int main(){
           cout << endl;
           continue;
         }
+        //prompt user for second vertex
         do{
           cout << "Enter ending vertex: ";
           getInput(edgeEnd);
@@ -147,13 +153,17 @@ int main(){
           cout << endl;
           continue;
         }
+        //prompt user for edge length
         edgeLength = getInt("Enter edge length: ");
         cin.ignore(81, '\n');
+        //update adjacency matrix
         adjacencyMatrix[firstVertexId][secondVertexId] = edgeLength;
         cout << "<edge successfully added>" << endl;
       }
+      //remove an edge
       else if(strcmp(input, "remove") == 0){
         cout << endl << "-----REMOVING EDGE-----" << endl;
+        //prompt user for first vertex
         do{
           cout << "Enter starting vertex: ";
           getInput(edgeStart);
@@ -163,6 +173,7 @@ int main(){
           cout << endl;
           continue;
         }
+        //prompt user for second vertex
         do{
           cout << "Enter ending vertex: ";
           getInput(edgeEnd);
@@ -172,16 +183,19 @@ int main(){
           cout << endl;
           continue;
         }
+        //remove an edge if it exists
         if(adjacencyMatrix[firstVertexId][secondVertexId] != -1){
           adjacencyMatrix[firstVertexId][secondVertexId] = -1;
           cout << "<edge successfully removed>" << endl;
         }
+        //inform user if the edge does not exist
         else{
           cout << "<no edge found>" << endl;
         }
       }
       cout << endl;
     }
+    //prints the adjacency matrix to the console
     else if(strcmp(input, "table") == 0){
       cout << "Adjacency Matrix: " << endl;
       for(int m = 0; m < 20; m++){
@@ -191,9 +205,11 @@ int main(){
         cout << endl;
       }
     }
+    //searchs for a path using Dijkstra's algorithm
     else if(strcmp(input, "search") == 0){
       cout << endl << "-----SEARCH PATH-----" << endl;
       cout << "(input 'back' to cancel)\n" << endl;
+      //prompt for first vertex
       do{
         cout << "Enter starting vertex: ";
         getInput(edgeStart);
@@ -203,6 +219,7 @@ int main(){
         cout << endl;
         continue;
       }
+      //prompt for second vertex
       do{
         cout << "Enter ending vertex: ";
         getInput(edgeEnd);
@@ -220,33 +237,38 @@ int main(){
   return 0;
 }
 
-//attempts to find a path using djikstra's algorithm
+//attempts to find a path between two vertices using djikstra's algorithm
 void findPath(int startId, int endId, vector<Vertex> graph, int adjacencyMatrix[20][20]){
   int leastDistanceId = -1;
   int currentDistance;
 
   vector<Vertex> unvisited;
+  //push all vertices in the graph into the unvisited list
   for(int a = 0; a < graph.size(); a++){
     unvisited.push_back(graph[a]);
   }
+  //set distance of starting vertex to 0
   for(int b = 0; b < unvisited.size(); b++){
     if(unvisited[b].id == startId){
       unvisited[b].dist = 0;
     }
   }
+  //loop until target is not in the unvisited list
   while(targetUnvisited(endId, unvisited)){
-    for(int test = 0; test < unvisited.size(); test++){
-      cout << unvisited[test].label << " " << unvisited[test].id << " " << unvisited[test].dist << endl;
-    }
+    //debug code to print out all vertices in the unvisited list
+    // for(int test = 0; test < unvisited.size(); test++){
+    //   cout << unvisited[test].label << " " << unvisited[test].id << " " << unvisited[test].dist << endl;
+    // }
     leastDistanceId = getLeastDistanceId(unvisited);
-    cout << "least distance ID: " << leastDistanceId << endl;
+    //cout << "least distance ID: " << leastDistanceId << endl;
+    //exit if there is no vertex with a distance value other than -1
     if(leastDistanceId == -1){
       break;
     }
     //remove least distance node from the unvisited list
     for(int c = 0; c < unvisited.size(); c++){
     	if(leastDistanceId == unvisited[c].id){
-        cout << "erase :" << leastDistanceId << endl;
+        //cout << "erase :" << leastDistanceId << endl;
         currentDistance = unvisited[c].dist;
     	  unvisited.erase(unvisited.begin()+c);
     	}
@@ -288,17 +310,19 @@ bool targetUnvisited(int targetId, vector<Vertex> unvisited){
   return false;
 }
 
+//loops through the unvisited list and gets the id of the vertex with the least distance value
+//returns -1 if no vertices have a distance value that is not -1
 int getLeastDistanceId(vector<Vertex> unvisited){
   int leastDistance = -1;
   int leastDistanceId = -1;
   for(int i = 0; i < unvisited.size(); i++){
-    cout << "testing = " << "label: "  << unvisited[i].label << " distance: " << unvisited[i].dist << endl;
+    //cout << "testing = " << "label: "  << unvisited[i].label << " distance: " << unvisited[i].dist << endl;
     if(unvisited[i].dist != -1 && (leastDistance == -1 || (leastDistance != -1 && unvisited[i].dist < leastDistance))){
       leastDistance = unvisited[i].dist;
       leastDistanceId = unvisited[i].id;
     }
   }
-  cout << "final = " << "id: " << leastDistanceId << "least distance: " << leastDistance << endl;
+  //cout << "final = " << "id: " << leastDistanceId << "least distance: " << leastDistance << endl;
   return leastDistanceId;
 }
 
@@ -320,6 +344,7 @@ void getInput(char* input){
   setLowercase(input);
 }
 
+//loops through the graph vector to return the smallest vertex id value that can be used
 int getEmptyIndex(vector<Vertex> graph){
   int counter = 0;
   for(int i = 0; i < graph.size(); i++){
