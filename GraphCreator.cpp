@@ -13,6 +13,7 @@ struct Vertex {
   char label[81];
   int id;
   int dist;
+  int previousId;
 };
 
 //prototypes
@@ -251,6 +252,7 @@ void findPath(int startId, int endId, vector<Vertex> graph, int adjacencyMatrix[
   for(int b = 0; b < unvisited.size(); b++){
     if(unvisited[b].id == startId){
       unvisited[b].dist = 0;
+      graph[startId].previousId = -1;
     }
   }
   //loop until target is not in the unvisited list
@@ -285,6 +287,7 @@ void findPath(int startId, int endId, vector<Vertex> graph, int adjacencyMatrix[
           	if(d == unvisited[e].id){
               if(unvisited[e].dist == -1 || unvisited[e].dist > currentDistance + adjacencyMatrix[leastDistanceId][d]){
                 unvisited[e].dist = currentDistance + adjacencyMatrix[leastDistanceId][d];
+                graph[d].previousId = leastDistanceId;
               }
             }
           }
@@ -294,6 +297,13 @@ void findPath(int startId, int endId, vector<Vertex> graph, int adjacencyMatrix[
   }
   if(leastDistanceId != -1){
     cout << "\nLeast distance is: " << currentDistance << endl;
+    cout << "Path: ";
+    Vertex current = graph[endId];
+    while(current.previousId != -1){
+      cout << current.label << " <- ";
+      current = graph[current.previousId];
+    }
+    cout << graph[startId].label << endl;
   }
   else{
     cout << "\nNo path found." << endl;
